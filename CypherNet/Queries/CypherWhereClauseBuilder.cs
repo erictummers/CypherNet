@@ -17,7 +17,7 @@
         private static readonly MemberInfo NodeIdMember = ReflectOn<Node>.Member(n => n.Id).MemberInfo;
         private static readonly MemberInfo RelIdMember = ReflectOn<Relationship>.Member(n => n.Id).MemberInfo;
 
-        internal static string BuildWhereClause(Expression exp)
+        internal static string BuildWhereClause(Expression exp, bool isRegex = false)
         {
             exp = ExpressionEvaluator.PartialEval(exp);
             var lambda = exp as LambdaExpression;
@@ -26,13 +26,20 @@
             {
                 throw new InvalidCypherWhereExpressionException();
             }
-            var visitor = new WhereClauseVisitor();
+            var visitor = new WhereClauseVisitor(isRegex);
             return visitor.Translate(lambda.Body);
         }
 
         internal class WhereClauseVisitor : ExpressionVisitor
         {
             private StringBuilder _queryBuilder;
+            private bool _isRegex;
+
+            internal WhereClauseVisitor() : this(false) { }
+            internal WhereClauseVisitor(bool isRegex)
+            {
+                _isRegex = isRegex;
+            }
 
             internal string Translate(Expression expression)
             {
@@ -85,7 +92,8 @@
                         _queryBuilder.Append(" OR ");
                         break;
                     case ExpressionType.Equal:
-                        _queryBuilder.Append(" = ");
+                        if (_isRegex) _queryBuilder.Append(" =~ ");
+                        else _queryBuilder.Append(" = ");
                         break;
                     case ExpressionType.NotEqual:
                         _queryBuilder.Append(" <> ");

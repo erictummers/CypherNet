@@ -27,6 +27,8 @@
 
         internal Expression<Func<IWhereQueryContext<TIn>, bool>> WherePredicate { get; set; }
 
+        internal Expression<Func<IWhereQueryContext<TIn>, bool>> WhereRegexPredicate { get; set; }
+
         internal Expression<Func<IReturnQueryContext<TIn>, TOut>> ReturnClause { get; set; }
 
         internal Expression<Func<TIn, TOut>> DeleteClause { get; set; }
@@ -93,6 +95,7 @@
             }
             query.StartClause = this.StartClause;
             query.WherePredicate = this.WherePredicate;
+            query.WhereRegexPredicate = this.WhereRegexPredicate;
             query.CreateRelationpClause = this.CreateRelationpClause;
             query.Limit = this.Limit;
             query.Skip = this.Skip;
@@ -115,7 +118,9 @@
                                 : "CREATE " +
                                   CypherCreateRelationshipClauseBuilder.BuildCreateClause(CreateRelationpClause);
             var where = WherePredicate == null
-                            ? null
+                            ? WhereRegexPredicate == null 
+                                ? null 
+                                : "WHERE " + CypherWhereClauseBuilder.BuildWhereClause(WhereRegexPredicate, true)
                             : "WHERE " + CypherWhereClauseBuilder.BuildWhereClause(WherePredicate);
             var setClause = SetterClauses.Any()
                                 ? "SET " +

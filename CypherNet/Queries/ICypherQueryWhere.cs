@@ -11,5 +11,6 @@
                                                      ICypherQueryCreate<TVariables>
     {
         ICypherQueryReturns<TVariables> Where(Expression<Func<IWhereQueryContext<TVariables>, bool>> predicate);
+        ICypherQueryReturns<TVariables> WhereRegex(Expression<Func<IWhereQueryContext<TVariables>, bool>> predicate);
     }
 }

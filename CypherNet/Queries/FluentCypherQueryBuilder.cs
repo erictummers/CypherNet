@@ -23,6 +23,7 @@
         private Expression<Func<IUpdateQueryContext<TIn>, ISetResult>>[] _setters;
         private Expression<Action<IStartQueryContext<TIn>>> _startDef;
         private Expression<Func<IWhereQueryContext<TIn>, bool>> _wherePredicate;
+        private Expression<Func<IWhereQueryContext<TIn>, bool>> _whereRegexPredicate;
 
         internal FluentCypherQueryBuilder(ICypherClientFactory clientFactory)
         {
@@ -53,6 +54,12 @@
             return this;
         }
 
+        public ICypherQueryReturns<TIn> WhereRegex(Expression<Func<IWhereQueryContext<TIn>, bool>> predicate)
+        {
+            _whereRegexPredicate = predicate;
+            return this;
+        }
+
         public ICypherOrderBy<TIn, TOut> Return<TOut>(Expression<Func<IReturnQueryContext<TIn>, TOut>> func)
         {
             var query = BuildCypherQueryDefinition<TOut>();
@@ -66,6 +73,7 @@
                             {
                                 StartClause = _startDef,
                                 WherePredicate = _wherePredicate,
+                                WhereRegexPredicate = _whereRegexPredicate,
                                 CreateRelationpClause = _createClause
                             };
             foreach (var m in _matchClauses ?? Enumerable.Empty<Expression<Func<IMatchQueryContext<TIn>, IDefineCypherRelationship>>>())
