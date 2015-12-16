@@ -46,6 +46,40 @@ foreach (var node in nodes)
 }
 ```
 <dl>
+    <dt>Regular Expression</dt>
+    <dd></dd>
+</dl>
+```C#
+var clientFactory = Fluently.Configure("http://localhost:7474/db/data/").CreateSessionFactory();
+var cypherEndpoint = clientFactory.Create();
+
+var nodes = cypherEndpoint
+    .BeginQuery(p => new {person = p.Node, rel = p.Rel, role = p.Node}) // Define query variables
+    .Start(ctx => ctx.StartAtAny(ctx.Vars.person)) // Cypher START clause
+    .Match(ctx => ctx.Node(ctx.Vars.person).Outgoing(ctx.Vars.rel).To(ctx.Vars.role)) // Cypher MATCH clause
+    .WhereRegex(ctx =>ctx.Prop<string>(ctx.Vars.role, "title!") == "dev.*") // Cypher WHERE predicate
+    .Return(ctx => new { Person = ctx.Vars.person, Rel = ctx.Vars.rel, Role = ctx.Vars.role }) // Cypher RETURN clause
+    .Fetch(); // GO!
+
+/* Executes Cypher: 
+ * START person:node(*) 
+ * MATCH (person)-[rel]->(role) 
+ * WHERE role.title! =~ 'dev.*' 
+ * RETURN person as Person, rel as Rel, role as ROle
+*/
+
+Assert.IsTrue(nodes.Any());
+
+foreach (var node in nodes)
+{
+    dynamic start = node.Person; // Nodes & Relationships are dynamic types
+    dynamic end = node.Role;
+    Console.WriteLine(String.Format("{0} {1} {2}", start.name, node.Rel.Type, end.title));
+        // Prints "mark IS_A developer", and other people that have title matching dev.*
+}
+```
+
+<dl>
     <dt>Transactional</dt>
     <dd></dd>
 </dl>
